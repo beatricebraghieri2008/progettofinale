@@ -1,43 +1,53 @@
-js:const canvas = document.getElementById('gameCanvas');
-const ctx = canvas.getContext('2d');
+const pacman = document.getElementById('pacman');
+let pacmanPosition = { x: 0, y: 0 };
 
-// Parametri del gioco
-const pacmanRadius = 20;
-let pacmanX = 180;
-let pacmanY = 180;
-const speed = 5;
+// Dimensione del labirinto
+const gridSize = 40;  // Ogni cella è 40x40px
 
-// Funzione per disegnare Pac-Man
-function drawPacman() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);  // Pulisce la tela ad ogni frame
-
-    ctx.beginPath();
-    ctx.arc(pacmanX, pacmanY, pacmanRadius, 0.2 * Math.PI, 1.8 * Math.PI);  // Pac-Man come arco
-    ctx.lineTo(pacmanX, pacmanY);  // Completa la forma
-    ctx.fillStyle = "yellow";
-    ctx.fill();
-    ctx.closePath();
-}
-// Funzione per muovere Pac-Man
-function movePacman(event) {
+document.addEventListener('keydown', (event) => {
     switch (event.key) {
-        case "ArrowUp":
-            if (pacmanY - pacmanRadius > 0) pacmanY -= speed;
+        case 'ArrowUp':
+            movePacman(0, -gridSize);
             break;
-        case "ArrowDown":
-            if (pacmanY + pacmanRadius < canvas.height) pacmanY += speed;
+        case 'ArrowDown':
+            movePacman(0, gridSize);
             break;
-        case "ArrowLeft":
-            if (pacmanX - pacmanRadius > 0) pacmanX -= speed;
+        case 'ArrowLeft':
+            movePacman(-gridSize, 0);
             break;
-        case "ArrowRight":
-            if (pacmanX + pacmanRadius < canvas.width) pacmanX += speed;
+        case 'ArrowRight':
+            movePacman(gridSize, 0);
             break;
     }
+});
 
-    drawPacman();  // Rende visibile Pac-Man dopo ogni movimento
+function movePacman(dx, dy) {
+    const newX = pacmanPosition.x + dx;
+    const newY = pacmanPosition.y + dy;
+
+    if (isValidMove(newX, newY)) {
+        pacmanPosition.x = newX;
+        pacmanPosition.y = newY;
+        pacman.style.left = `${pacmanPosition.x}px`;
+        pacman.style.top = `${pacmanPosition.y}px`;
+    }
 }
 
-// Inizializza il gioco e imposta gli eventi per i tasti direzionali
-document.addEventListener('keydown', movePacman);
-drawPacman();  // Disegna Pac-Man all'inizio
+function isValidMove(x, y) {
+    // Aggiungi la logica per evitare le collisioni con le pareti
+    const walls = document.querySelectorAll('.parete');
+    for (let wall of walls) {
+        const wallRect = wall.getBoundingClientRect();
+        const pacmanRect = pacman.getBoundingClientRect();
+
+        if (
+            pacmanRect.left + x < wallRect.right &&
+            pacmanRect.right + x > wallRect.left &&
+            pacmanRect.top + y < wallRect.bottom &&
+            pacmanRect.bottom + y > wallRect.top
+        ) {
+            return false; // Pac-Man collide con una parete
+        }
+    }
+    return true; // Nessuna collisione
+}
